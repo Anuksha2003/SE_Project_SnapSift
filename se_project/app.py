@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 import os
 import shutil
 import face_recognition
@@ -20,7 +20,18 @@ def get_folder_contents():
             folder_contents[folder_name] = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     return folder_contents
 
-      
+
+
+@app.route('/rename', methods=['GET'])
+def rename_folder():
+    old_name = request.args.get('old_name')
+    new_name = request.args.get('new_name')
+    old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_name)
+    new_path = os.path.join(app.config['UPLOAD_FOLDER'], new_name)
+    os.rename(old_path, new_path)
+    return redirect('/')
+
+
 def crop_faces_and_save(input_image_path, output_folder,filename):
     image = face_recognition.load_image_file(input_image_path)
     face_locations = face_recognition.face_locations(image)
