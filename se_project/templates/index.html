@@ -4,46 +4,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
     <title>Group Photos</title>
-    <script>
-        function renameFolder(folderName) {
-            var newName = prompt("Enter new name for the folder:", folderName);
-            if (newName != null && newName != "") {
-                window.location.href = "/rename?old_name=" + folderName + "&new_name=" + newName;
-            }
-        }
-    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
-        .folder-name {
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #B4D4FF;
+        }
+
+        .top-bar {
+            background-color: #176B87;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .project_title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .project_title img {
+            margin-right: 10px;
+            height: 50px;
+            width: 50px;
+        }
+
+        .buttons {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .buttons input[type="file"] {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .buttons input[type="submit"] {
+            flex: 1;
+            background-color: #5cb85c; /* Green */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
             display: inline-block;
+            font-size: 16px;
             cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .buttons input[type="submit"]:hover {
+            background-color: #4cae4c; /* Darker Green */
+        }
+
+        .folder {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .folder ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .folder ul li {
+            cursor: pointer;
+            margin-bottom: 10px;
+            margin-right: 10px;
+            padding: 10px;
+            background-color: #FFFFFF;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .folder ul li img {
+            vertical-align: middle;
+            margin-right: 10px;
+            height: 100px;
+            width: 70px;
+        }
+
+        .folder ul li .folder-icon img {
+            height: 50px;
+            width: 50px;
+        }
+
+        .folder ul ul {
+            display: none;
+            margin-left: 20px;
+        }
+
+        .folder ul ul.show {
+            display: block;
+        }
+
+        .edit-prompt {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .edit-prompt input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .edit-prompt button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
         }
     </style>
 </head>
 
 <body>
-    <h1>Upload Photo</h1>
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
-    </form>
-    <h2>Folders</h2>
-    <div class="folder">
-        <ul>
-            {% for folder_name, file_names in folder_contents.items() %}
-            <li><span class="folder-name" ondblclick="renameFolder('{{ folder_name }}')">{{ folder_name }}</span>
-                <ul>
-                    {% for file_name in file_names %}
-                    <li><img src="{{ url_for('static', filename=folder_name + '/' + file_name) }}" alt="{{ file_name }}"
-                            height="100px" width="70px"></li>
-                    {% endfor %}
-                </ul>
-            </li>
-            {% endfor %}
-        </ul>
+    <div class="top-bar">
+        <div class="container">
+            <div class="project_title">
+                <img src="{{ url_for('static', filename='gallery.png') }}" alt="Gallery Icon">
+                <h1>SnapSift</h1>
+            </div>
+        </div>
     </div>
 
+    <div class="container">
+        <div class="buttons">
+            <form action="/" method="post" enctype="multipart/form-data">
+                <input type="file" name="file">
+                <input type="submit" value="Upload">
+            </form>
+        </div>
+
+        <h2>Folders</h2>
+        <div class="folder">
+            {% for folder_name, file_names in folder_contents.items() %}
+            <ul>
+                <li>
+                    <div class="folder-icon">
+                        <img src="{{ url_for('static', filename='photo.png') }}" alt="Photo Icon">
+                    </div>
+                    <div class="folder-details" id="{{ folder_name }}">
+                        {{ folder_name }}
+                        <ul class="photos">
+                            {% for file_name in file_names %}
+                            <li><img src="{{ url_for('static', filename=folder_name + '/' + file_name) }}"
+                                    alt="{{ file_name }}"></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="edit-prompt" id="edit-prompt">
+        <input type="text" id="edit-input" placeholder="Enter new name">
+        <button id="edit-submit">Submit</button>
+    </div>
+
+    <script>
+        // Add event listener to each folder to toggle photo display
+        document.querySelectorAll('.folder ul li').forEach(item => {
+            item.addEventListener('click', event => {
+                item.querySelector('.photos').classList.toggle('show');
+            });
+        });
+
+        // Double click event to show edit prompt
+        document.querySelectorAll('.folder-details').forEach(folder => {
+            folder.addEventListener('dblclick', event => {
+                const folderName = folder.getAttribute('id');
+                const editPrompt = document.getElementById('edit-prompt');
+                const editInput = document.getElementById('edit-input');
+
+                editInput.value = folderName;
+                editPrompt.style.display = 'block';
+
+                // Submit edit prompt
+                document.getElementById('edit-submit').addEventListener('click', () => {
+                    const newName = editInput.value;
+                    // Send request to rename folder
+                    window.location.href = `/rename?old_name=${folderName}&new_name=${newName}`;
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

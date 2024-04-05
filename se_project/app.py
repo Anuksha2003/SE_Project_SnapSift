@@ -3,9 +3,6 @@ import os
 import shutil
 import face_recognition
 from werkzeug.utils import secure_filename
-# import mysql.connector
-from PIL import Image
-
 
 app = Flask(__name__, static_folder='./collection')
 
@@ -19,18 +16,6 @@ def get_folder_contents():
             folder_path = os.path.join(root, folder_name)
             folder_contents[folder_name] = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     return folder_contents
-
-
-
-@app.route('/rename', methods=['GET'])
-def rename_folder():
-    old_name = request.args.get('old_name')
-    new_name = request.args.get('new_name')
-    old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_name)
-    new_path = os.path.join(app.config['UPLOAD_FOLDER'], new_name)
-    os.rename(old_path, new_path)
-    return redirect('/')
-
 
 def crop_faces_and_save(input_image_path, output_folder,filename):
     image = face_recognition.load_image_file(input_image_path)
@@ -62,10 +47,6 @@ def crop_faces_and_save(input_image_path, output_folder,filename):
             print(f"Face {i+1} matches an existing face. Skipping...")
 
         else:
-            # file_count = 0
-
-            # for _, _, files in os.walk("collection"):
-            #     file_count += len(files)
             file_count = len([name for name in os.listdir("collection") if os.path.isdir(os.path.join("collection", name))])
 
             new_face_folder = os.path.join(output_folder, f"face_{file_count+1}")
@@ -101,6 +82,15 @@ def upload_group_photo():
     folder_contents = get_folder_contents()
 
     return render_template('index.html', folder_contents=folder_contents, UPLOAD_FOLDER=UPLOAD_FOLDER)
+
+@app.route('/rename', methods=['GET'])
+def rename_folder():
+    old_name = request.args.get('old_name')
+    new_name = request.args.get('new_name')
+    old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_name)
+    new_path = os.path.join(app.config['UPLOAD_FOLDER'], new_name)
+    os.rename(old_path, new_path)
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run(debug=True)
