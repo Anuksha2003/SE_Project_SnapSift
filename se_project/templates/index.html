@@ -135,6 +135,38 @@
             cursor: pointer;
             border-radius: 5px;
         }
+
+        .collage-prompt {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .collage-prompt input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .collage-prompt button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #create-collage {
+            margin-left: auto;
+        }
     </style>
 </head>
 
@@ -154,6 +186,7 @@
                 <input type="file" name="file">
                 <input type="submit" value="Upload">
             </form>
+            <button class="btn btn-primary" id="create-collage">Create Collage</button>
         </div>
 
         <h2>Folders</h2>
@@ -184,6 +217,11 @@
         <button id="edit-submit">Submit</button>
     </div>
 
+    <div class="collage-prompt" id="collage-prompt">
+        <input type="text" id="folder-name" placeholder="Enter folder name">
+        <button id="create-collage-submit">Create Collage</button>
+    </div>
+
     <script>
         // Add event listener to each folder to toggle photo display
         document.querySelectorAll('.folder ul li').forEach(item => {
@@ -209,6 +247,31 @@
                     window.location.href = `/rename?old_name=${folderName}&new_name=${newName}`;
                 });
             });
+        });
+
+        // Create collage button event
+        document.getElementById('create-collage').addEventListener('click', () => {
+            const collagePrompt = document.getElementById('collage-prompt');
+            collagePrompt.style.display = 'block';
+        });
+
+        // Create collage form submit event
+        document.getElementById('create-collage-submit').addEventListener('click', () => {
+            const folderName = document.getElementById('folder-name').value;
+            // Send AJAX request to create collage
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `/create-collage?folder_name=${folderName}`);
+            xhr.responseType = 'blob';
+            xhr.onload = () => {
+                const url = window.URL.createObjectURL(xhr.response);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'collage.jpg';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            };
+            xhr.send();
         });
     </script>
 </body>
