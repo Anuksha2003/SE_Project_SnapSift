@@ -231,10 +231,19 @@
                     </div>
                     <div class="folder-details" id="{{ folder_name }}">
                         {{ folder_name }}
+                        <a href="#" class="edit-folder">Edit</a>
                         <ul class="photos">
                             {% for file_name in file_names %}
-                            <li><img src="{{ url_for('static', filename= 'collection/' + folder_name + '/' + file_name) }}"
-                                    alt="{{ file_name }}"></li>
+                            <li>
+                                <div class="image-container">
+                                    <img src="{{ url_for('static', filename= 'collection/' + folder_name + '/' + file_name) }}"
+                                        alt="{{ file_name }}">
+                                    <div class="label-input">
+                                        <input type="text" placeholder="Enter label">
+                                        <button class="submit-label">Submit</button>
+                                    </div>
+                                </div>
+                            </li>
                             {% endfor %}
                         </ul>
                     </div>
@@ -242,6 +251,7 @@
             </ul>
             {% endfor %}
         </div>
+
         <br>
         <br>
         <br>
@@ -289,7 +299,7 @@
     <script>
         // Add event listener to each folder to toggle photo display
         document.querySelectorAll('.folder ul li').forEach(item => {
-            item.addEventListener('click', event => {
+            item.addEventListener('dblclick', event => {
                 const folderName = item.querySelector('.folder-details').id;
                 const photos = item.querySelectorAll('.photos li img');
 
@@ -333,21 +343,35 @@
             });
         });
 
-        // Double click event to show edit prompt
-        document.querySelectorAll('.folder-details').forEach(folder => {
-            folder.addEventListener('dblclick', event => {
-                const folderName = folder.getAttribute('id');
-                const editPrompt = document.getElementById('edit-prompt');
-                const editInput = document.getElementById('edit-input');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Event listener for folder rename via "Edit" link
+            document.querySelectorAll('.edit-folder').forEach(editLink => {
+                editLink.addEventListener('click', event => {
+                    event.preventDefault();
+                    const folderDetails = editLink.closest('.folder-details');
+                    const folderName = folderDetails.id;
+                    const editPrompt = document.getElementById('edit-prompt');
+                    const editInput = document.getElementById('edit-input');
 
-                editInput.value = folderName;
-                editPrompt.style.display = 'block';
+                    editInput.value = folderName;
+                    editPrompt.style.display = 'block';
 
-                // Submit edit prompt
-                document.getElementById('edit-submit').addEventListener('click', () => {
-                    const newName = editInput.value;
-                    // Send request to rename folder
-                    window.location.href = `/rename?old_name=${folderName}&new_name=${newName}`;
+                    // Submit edit prompt
+                    document.getElementById('edit-submit').addEventListener('click', () => {
+                        const newName = editInput.value;
+                        // Send request to rename folder via AJAX
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('GET', `/rename?old_name=${folderName}&new_name=${newName}`);
+                        xhr.onload = () => {
+                            if (xhr.status === 200) {
+                                // Reload page after renaming folder
+                                window.location.reload();
+                            } else {
+                                console.error('Failed to rename folder');
+                            }
+                        };
+                        xhr.send();
+                    });
                 });
             });
         });
