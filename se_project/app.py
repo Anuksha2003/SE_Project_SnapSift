@@ -1,25 +1,37 @@
 import os
-from flask import Flask, render_template, request, redirect, send_file
+from flask import Flask, render_template, request, redirect, send_file, request, jsonify
 import shutil
 import face_recognition
 from PIL import Image
 from werkzeug.utils import secure_filename
 from typing import List, Tuple
 
-app = Flask(__name__, static_folder='./collection')
+app = Flask(__name__, static_folder='./static')
 
-UPLOAD_FOLDER = './collection'
+UPLOAD_FOLDER = './static/collection'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def get_folder_contents():
     folder_contents = {}
-    for root, dirs, files in os.walk("collection"):
+    for root, dirs, files in os.walk("./static/collection"):
         for folder_name in dirs:
             folder_path = os.path.join(root, folder_name)
-            folder_contents[folder_name] = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+            folder_contents[folder_name] = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f != 'seed.jpg']
+            # print(folder_contents)
+            
     return folder_contents
 
-def crop_faces_and_save(input_image_path, output_folder,filename):
+def get_label_contents():
+    folder_contents = {}
+    for root, dirs, files in os.walk("./static/labels"):
+        for folder_name in dirs:
+            folder_path = os.path.join(root, folder_name)
+            folder_contents[folder_name] = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f != 'seed.jpg']
+            print(folder_contents)
+            
+    return folder_contents
+
+def crop_faces_and_save(input_image_path, output_folder, filename):
     image = face_recognition.load_image_file(input_image_path)
     face_locations = face_recognition.face_locations(image)
     face_encodings = face_recognition.face_encodings(image, face_locations)
@@ -49,7 +61,7 @@ def crop_faces_and_save(input_image_path, output_folder,filename):
             print(f"Face {i+1} matches an existing face. Skipping...")
 
         else:
-            file_count = len([name for name in os.listdir("collection") if os.path.isdir(os.path.join("collection", name))])
+            file_count = len([name for name in os.listdir("./static/collection") if os.path.isdir(os.path.join("collection", name))])
 
             new_face_folder = os.path.join(output_folder, f"face_{file_count+1}")
             os.makedirs(new_face_folder)
@@ -61,80 +73,6 @@ def crop_faces_and_save(input_image_path, output_folder,filename):
             shutil.copy(input_image_path, os.path.join(new_face_folder, filename))
             print(f"New face {file_count+1} detected. Folder created.")
 
-
-def find_multiples(number : int):
-    multiples = set()
-    for i in range(number - 1, 1, -1):
-        mod = number % i
-        if mod == 0:
-            tup = (i, int(number / i))
-            if tup not in multiples and (tup[1], tup[0]) not in multiples:
-                multiples.add(tup)
-                
-    if len(multiples) == 0:
-        mod == number % 2
-        div = number // 2
-        multiples.add((2, div + mod))
-        
-    return list(multiples)
-
-def get_smallest_multiples(number : int, smallest_first = True) -> Tuple[int, int]:
-    multiples = find_multiples(number)
-    smallest_sum = number
-    index = 0
-    for i, m in enumerate(multiples):
-        sum = m[0] + m[1]
-        if sum < smallest_sum:
-            smallest_sum = sum
-            index = i
-            
-    result = list(multiples[i])
-    if smallest_first:
-        result.sort()
-        
-    return result[0], result[1]
-    
-
-def create_collage(listofimages : List[str], n_cols : int = 0, n_rows: int = 0, 
-                   thumbnail_scale : float = 1.0, thumbnail_width : int = 0, thumbnail_height : int = 0):
-    
-    n_cols = n_cols if n_cols >= 0 else abs(n_cols)
-    n_rows = n_rows if n_rows >= 0 else abs(n_rows)
-    
-    if n_cols == 0 and n_rows != 0:
-        n_cols = len(listofimages) // n_rows
-        
-    if n_rows == 0 and n_cols != 0:
-        n_rows = len(listofimages) // n_cols
-        
-    if n_rows == 0 and n_cols == 0:
-        n_cols, n_rows = get_smallest_multiples(len(listofimages))
-    
-    thumbnail_width = 0 if thumbnail_width == 0 or n_cols == 0 else round(thumbnail_width / n_cols)
-    thumbnail_height = 0 if thumbnail_height == 0 or n_rows == 0 else round(thumbnail_height/n_rows)
-    
-    all_thumbnails : List[Image.Image] = []
-    for p in listofimages:
-        thumbnail = Image.open(p)
-        if thumbnail_width * thumbnail_scale < thumbnail.width:
-            thumbnail_width = round(thumbnail.width * thumbnail_scale)
-        if thumbnail_height * thumbnail_scale < thumbnail.height:
-            thumbnail_height = round(thumbnail.height * thumbnail_scale)
-        
-        thumbnail.thumbnail((thumbnail_width, thumbnail_height))
-        all_thumbnails.append(thumbnail)
-
-    new_im = Image.new('RGB', (thumbnail_width * n_cols, thumbnail_height * n_rows), 'white')
-    
-    i, x, y = 0, 0, 0
-    for col in range(n_cols):
-        for row in range(n_rows):
-            if i > len(all_thumbnails) - 1:
-                continue
-            
-            print(i, x, y)
-            new_im.paste(all_thumbnails[i], (x, y))
-           
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -149,10 +87,13 @@ def upload_group_photo():
             filename = secure_filename(file.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-            crop_faces_and_save(file_path, "collection",filename)
+            crop_faces_and_save(file_path, "./static/collection",filename)
 
     folder_contents = get_folder_contents()
-    return render_template('index.html', folder_contents=folder_contents, UPLOAD_FOLDER=UPLOAD_FOLDER)
+    label_contents = get_label_contents()
+    # return render_template('index.html', folder_contents=folder_contents, UPLOAD_FOLDER=UPLOAD_FOLDER)
+    return render_template('index.html', folder_contents=folder_contents, label_contents=label_contents, UPLOAD_FOLDER=UPLOAD_FOLDER)
+
 
 @app.route('/rename', methods=['GET'])
 def rename_folder():
@@ -163,15 +104,58 @@ def rename_folder():
     os.rename(old_path, new_path)
     return redirect('/')
 
-@app.route('/create-collage', methods=['GET'])
-def create_collage_endpoint():
-    folder_name = request.form.get('folder_name')
-    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_name)
-    list_of_images = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-    print(list_of_images)
-    create_collage(list_of_images)
-    collage_path = os.path.join(folder_path, 'Collage.jpg')  # Change the extension if necessary
-    return send_file(collage_path, as_attachment=True)
+# @app.route('/create-collage', methods=['GET'])
+# def create_collage_endpoint():
+#     folder_name = request.form.get('folder_name')
+#     folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_name)
+#     list_of_images = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+#     print(list_of_images)
+#     create_collage(list_of_images)
+#     collage_path = os.path.join(folder_path, 'Collage.jpg')  # Change the extension if necessary
+#     return send_file(collage_path, as_attachment=True)
+
+@app.route('/submit-label', methods=['POST'])
+def submit_label():
+    if request.method == 'POST':
+        data = request.get_json()
+        folder_name = data.get('folderName')
+        image_url = data.get('imageUrl')
+        label = data.get('label')
+
+        # Print the received label and image URL
+        print(f"Received label '{label}' for image '{image_url}' in folder '{folder_name}'")
+
+        # You can further process or use this data as needed
+        process_label(folder_name, image_url, label)
+
+        return jsonify({'message': 'Label submitted successfully'}), 200
+    else:
+        return jsonify({'error': 'Method not allowed'}), 405
+
+def process_label(folder_name, image_url, label):
+    labels_directory = './static/labels'
+
+    if not os.path.exists(labels_directory):
+        os.makedirs(labels_directory)
+
+    # Check if the label directory exists within the labels directory
+    label_directory = os.path.join(labels_directory, label)
+    if not os.path.exists(label_directory):
+        # If the label directory doesn't exist, create it
+        os.makedirs(label_directory)
+
+    try:
+        # Extract the image file name from the image URL
+        image_filename = "./static/collection/" + folder_name + "/" + image_url
+
+        # Copy the image to the label directory
+        shutil.copy(image_filename, label_directory)
+
+        print(f"Image '{image_filename}' copied to '{label}' folder.")
+    except Exception as e:
+        print(f"Error copying image to label folder: {str(e)}")
+
+    
 
 if __name__ == '__main__':
     app.run(debug=True)

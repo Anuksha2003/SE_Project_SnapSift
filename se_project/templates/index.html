@@ -47,7 +47,8 @@
 
         .buttons input[type="submit"] {
             flex: 1;
-            background-color: #5cb85c; /* Green */
+            background-color: #5cb85c;
+            /* Green */
             border: none;
             color: white;
             padding: 10px 20px;
@@ -60,7 +61,8 @@
         }
 
         .buttons input[type="submit"]:hover {
-            background-color: #4cae4c; /* Darker Green */
+            background-color: #4cae4c;
+            /* Darker Green */
         }
 
         .folder {
@@ -167,6 +169,36 @@
         #create-collage {
             margin-left: auto;
         }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow: auto;
+            padding: 20px;
+
+        }
+
+        .overlay-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+
+        }
+
+        .overlay-content img {
+            max-width: 80%;
+            max-height: 80vh;
+            margin-bottom: 20px;
+
+        }
     </style>
 </head>
 
@@ -174,7 +206,7 @@
     <div class="top-bar">
         <div class="container">
             <div class="project_title">
-                <img src="{{ url_for('static', filename='gallery.png') }}" alt="Gallery Icon">
+                <img src="{{ url_for('static', filename='collection/gallery.png') }}" alt="Gallery Icon">
                 <h1>SnapSift</h1>
             </div>
         </div>
@@ -186,7 +218,7 @@
                 <input type="file" name="file">
                 <input type="submit" value="Upload">
             </form>
-            <button class="btn btn-primary" id="create-collage">Create Collage</button>
+            <!-- <button class="btn btn-primary" id="create-collage">Create Collage</button> -->
         </div>
 
         <h2>Folders</h2>
@@ -195,13 +227,37 @@
             <ul>
                 <li>
                     <div class="folder-icon">
-                        <img src="{{ url_for('static', filename='photo.png') }}" alt="Photo Icon">
+                        <img src="{{ url_for('static', filename='collection/photo.png') }}" alt="Photo Icon">
                     </div>
                     <div class="folder-details" id="{{ folder_name }}">
                         {{ folder_name }}
                         <ul class="photos">
                             {% for file_name in file_names %}
-                            <li><img src="{{ url_for('static', filename=folder_name + '/' + file_name) }}"
+                            <li><img src="{{ url_for('static', filename= 'collection/' + folder_name + '/' + file_name) }}"
+                                    alt="{{ file_name }}"></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+            {% endfor %}
+        </div>
+        <br>
+        <br>
+        <br>
+        <h2>Labels</h2>
+        <div class="folder">
+            {% for folder_name, file_names in label_contents.items() %}
+            <ul>
+                <li>
+                    <div class="folder-icon">
+                        <img src="{{ url_for('static', filename='collection/photo.png') }}" alt="Photo Icon">
+                    </div>
+                    <div class="folder-details" id="{{ folder_name }}">
+                        {{ folder_name }}
+                        <ul class="photos">
+                            {% for file_name in file_names %}
+                            <li><img src="{{ url_for('static', filename= 'labels/' + folder_name + '/' + file_name) }}"
                                     alt="{{ file_name }}"></li>
                             {% endfor %}
                         </ul>
@@ -212,21 +268,68 @@
         </div>
     </div>
 
+    <div class="overlay" id="imageOverlay">
+        <div class="overlay-content" id="imageContainer">
+            <!-- Images will be dynamically inserted here -->
+        </div>
+    </div>
+
+
+
     <div class="edit-prompt" id="edit-prompt">
         <input type="text" id="edit-input" placeholder="Enter new name">
         <button id="edit-submit">Submit</button>
     </div>
 
-    <div class="collage-prompt" id="collage-prompt">
+    <!-- <div class="collage-prompt" id="collage-prompt">
         <input type="text" id="folder-name" placeholder="Enter folder name">
         <button id="create-collage-submit">Create Collage</button>
-    </div>
+    </div> -->
 
     <script>
         // Add event listener to each folder to toggle photo display
         document.querySelectorAll('.folder ul li').forEach(item => {
             item.addEventListener('click', event => {
-                item.querySelector('.photos').classList.toggle('show');
+                const folderName = item.querySelector('.folder-details').id;
+                const photos = item.querySelectorAll('.photos li img');
+
+                const imageContainer = document.getElementById('imageContainer');
+                imageContainer.innerHTML = '';
+
+                photos.forEach(img => {
+                    const newImgContainer = document.createElement('div');
+
+                    const newImg = document.createElement('img');
+                    newImg.src = img.src;
+                    newImg.alt = img.alt;
+
+                    const labelInput = document.createElement('input');
+                    labelInput.type = 'text';
+                    labelInput.placeholder = 'Enter label';
+
+                    const submitButton = document.createElement('button');
+                    submitButton.textContent = 'Submit';
+                    submitButton.addEventListener('click', () => {
+                        const label = labelInput.value;
+                        submitLabel(folderName, img.alt, label);
+                    });
+
+                    newImgContainer.appendChild(newImg);
+                    newImgContainer.appendChild(labelInput);
+                    newImgContainer.appendChild(submitButton);
+
+                    imageContainer.appendChild(newImgContainer);
+                });
+
+                const overlay = document.getElementById('imageOverlay');
+                overlay.style.display = 'flex'; // Display overlay
+
+                // Close overlay on click outside image container
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) {
+                        overlay.style.display = 'none';
+                    }
+                });
             });
         });
 
@@ -250,29 +353,43 @@
         });
 
         // Create collage button event
-        document.getElementById('create-collage').addEventListener('click', () => {
-            const collagePrompt = document.getElementById('collage-prompt');
-            collagePrompt.style.display = 'block';
-        });
+        // document.getElementById('create-collage').addEventListener('click', () => {
+        //     const collagePrompt = document.getElementById('collage-prompt');
+        //     collagePrompt.style.display = 'block';
+        // });
 
         // Create collage form submit event
-        document.getElementById('create-collage-submit').addEventListener('click', () => {
-            const folderName = document.getElementById('folder-name').value;
-            // Send AJAX request to create collage
+        // document.getElementById('create-collage-submit').addEventListener('click', () => {
+        //     const folderName = document.getElementById('folder-name').value;
+        //     // Send AJAX request to create collage
+        //     const xhr = new XMLHttpRequest();
+        //     xhr.open('GET', `/create-collage?folder_name=${folderName}`);
+        //     xhr.responseType = 'blob';
+        //     xhr.onload = () => {
+        //         const url = window.URL.createObjectURL(xhr.response);
+        //         const a = document.createElement('a');
+        //         a.href = url;
+        //         a.download = 'collage.jpg';
+        //         document.body.appendChild(a);
+        //         a.click();
+        //         window.URL.revokeObjectURL(url);
+        //     };
+        //     xhr.send();
+        // });
+        function submitLabel(folderName, imageUrl, label) {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', `/create-collage?folder_name=${folderName}`);
-            xhr.responseType = 'blob';
-            xhr.onload = () => {
-                const url = window.URL.createObjectURL(xhr.response);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'collage.jpg';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
+            xhr.open('POST', '/submit-label', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                    console.log('Label submitted successfully!');
+                    const overlay = document.getElementById('imageOverlay');
+                    overlay.style.display = 'none';
+                }
             };
-            xhr.send();
-        });
+            const data = JSON.stringify({ folderName: folderName, imageUrl: imageUrl, label: label });
+            xhr.send(data);
+        }
     </script>
 </body>
 
