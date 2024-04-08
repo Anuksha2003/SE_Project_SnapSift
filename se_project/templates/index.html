@@ -12,11 +12,12 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #B4D4FF;
+            background-color: rgb(44, 41, 41);
+            color: white;
         }
 
         .top-bar {
-            background-color: #176B87;
+            background-color: black;
             color: white;
             text-align: center;
             padding: 10px 0;
@@ -70,11 +71,14 @@
             flex-wrap: wrap;
             justify-content: space-between;
             margin-bottom: 20px;
+            color: black;
+            
         }
 
         .folder ul {
             list-style-type: none;
             padding-left: 0;
+            /* box-shadow: #fff; */
         }
 
         .folder ul li {
@@ -97,8 +101,9 @@
         }
 
         .folder ul li .folder-icon img {
-            height: 50px;
-            width: 50px;
+            height: 90px;
+            width: 90px;
+            border-radius: 5px;
         }
 
         .folder ul ul {
@@ -109,7 +114,56 @@
         .folder ul ul.show {
             display: block;
         }
+        
+        .labels {
+            display: flex;
+            flex-wrap: wrap;
+            /* justify-content: space-between; */
+            margin-bottom: 20px;
+            /* padding-right: 50px; */
+        }
 
+        .labels ul {
+            list-style-type: none;
+            padding-left: 0;
+        
+        }
+
+        .labels ul li {
+            cursor: pointer;
+            margin-bottom: 10px;
+            margin-right: 10px;
+            padding: 10px;
+            background-color: #FFFFFF;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            color:black;
+        }
+
+        .labels ul li img {
+            vertical-align: middle;
+            margin-right: 10px;
+            height: 100px;
+            width: 70px;
+        }
+
+        .labels ul li .folder-icon img {
+            height: 90px;
+            width: 90px;
+            margin-right: 20px;
+
+        }
+
+        .labels ul ul {
+            display: none;
+            margin-left: 20px;
+        }
+
+        .labels ul ul.show {
+            display: block;
+        }
 
         .edit-prompt {
             display: none;
@@ -196,6 +250,10 @@
             border: none;
             cursor: pointer;
         }
+        h2{
+            margin-bottom: 20px;
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -254,7 +312,7 @@
         <br>
         <br>
         <h2>Labels</h2>
-        <div class="folder">
+        <div class="labels">
             {% for folder_name, file_names in label_contents.items() %}
             <ul>
                 <li>
@@ -325,6 +383,51 @@
                     newImgContainer.appendChild(newImg);
                     newImgContainer.appendChild(labelInput);
                     newImgContainer.appendChild(submitButton);
+
+                    imageContainer.appendChild(newImgContainer);
+                });
+
+                const overlay = document.getElementById('imageOverlay');
+                overlay.style.display = 'flex'; // Display overlay
+
+                // Close overlay on click outside image container
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) {
+                        overlay.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        document.querySelectorAll('.labels ul li').forEach(item => {
+            item.addEventListener('dblclick', event => {
+                const folderName = item.querySelector('.folder-details').id;
+                const photos = item.querySelectorAll('.photos li img');
+
+                const imageContainer = document.getElementById('imageContainer');
+                imageContainer.innerHTML = '';
+
+                photos.forEach(img => {
+                    const newImgContainer = document.createElement('div');
+
+                    const newImg = document.createElement('img');
+                    newImg.src = img.src;
+                    newImg.alt = img.alt;
+
+                    // const labelInput = document.createElement('input');
+                    // labelInput.type = 'text';
+                    // labelInput.placeholder = 'Enter label';
+
+                    // const submitButton = document.createElement('button');
+                    // submitButton.textContent = 'Submit';
+                    // submitButton.addEventListener('click', () => {
+                    //     const label = labelInput.value;
+                    //     submitLabel(folderName, img.alt, label);
+                    // });
+
+                    newImgContainer.appendChild(newImg);
+                    // newImgContainer.appendChild(labelInput);
+                    // newImgContainer.appendChild(submitButton);
 
                     imageContainer.appendChild(newImgContainer);
                 });
