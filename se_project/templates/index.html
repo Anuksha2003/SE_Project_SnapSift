@@ -72,7 +72,7 @@
             justify-content: space-between;
             margin-bottom: 20px;
             color: black;
-            
+
         }
 
         .folder ul {
@@ -114,7 +114,7 @@
         .folder ul ul.show {
             display: block;
         }
-        
+
         .labels {
             display: flex;
             flex-wrap: wrap;
@@ -126,7 +126,7 @@
         .labels ul {
             list-style-type: none;
             padding-left: 0;
-        
+
         }
 
         .labels ul li {
@@ -139,7 +139,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
-            color:black;
+            color: black;
         }
 
         .labels ul li img {
@@ -163,6 +163,41 @@
 
         .labels ul ul.show {
             display: block;
+        }
+
+        .uploaded-images {
+            margin-bottom: 20px;
+        }
+
+        .uploaded-images h2 {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: left;
+        }
+
+        .image-wrapper {
+            text-align: left;
+            margin-bottom: 20px;
+            margin-right: 20px;
+        }
+
+        .image-container img {
+            width: 200px;
+            /* Set a specific width */
+            height: 200px;
+            /* Set a specific height */
+            object-fit: cover;
+            /* Ensure the image covers the specified dimensions */
+        }
+
+        .image-name {
+            margin-top: 10px;
+            color: white;
         }
 
         .edit-prompt {
@@ -224,7 +259,7 @@
             width: 60%;
             display: grid;
             margin-top: 20px;
-            
+
 
         }
 
@@ -250,7 +285,8 @@
             border: none;
             cursor: pointer;
         }
-        h2{
+
+        h2 {
             margin-bottom: 20px;
             color: #fff;
         }
@@ -261,7 +297,7 @@
     <div class="top-bar">
         <div class="container">
             <div class="project_title">
-                <img src="{{ url_for('static', filename='collection/gallery.png') }}" alt="Gallery Icon">
+                <img src="{{ url_for('static', filename='gallery.png') }}" alt="Gallery Icon">
                 <h1>SnapSift</h1>
             </div>
         </div>
@@ -282,7 +318,7 @@
             <ul>
                 <li>
                     <div class="folder-icon">
-                        <img src="{{ url_for('static', filename='collection/photo.png') }}" alt="Photo Icon">
+                        <img src="{{ url_for('static', filename='photo.png') }}" alt="Photo Icon">
                     </div>
                     <div class="folder-details" id="{{ folder_name }}">
                         {{ folder_name }}
@@ -317,7 +353,7 @@
             <ul>
                 <li>
                     <div class="folder-icon">
-                        <img src="{{ url_for('static', filename='collection/photo.png') }}" alt="Photo Icon">
+                        <img src="{{ url_for('static', filename='photo.png') }}" alt="Photo Icon">
                     </div>
                     <div class="folder-details" id="{{ folder_name }}">
                         {{ folder_name }}
@@ -332,7 +368,22 @@
             </ul>
             {% endfor %}
         </div>
+        <div class="uploaded-images">
+            <h2 style="text-align: left; color: white;">All Images</h2>
+            <div class="image-container">
+                {% for image in uploaded_images %}
+                <div class="image-wrapper">
+                    <img src="{{ url_for('static', filename='collection/' + image) }}" alt="{{ image }}">
+                    <!-- <p class="image-name">{{ image }}</p> -->
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
+
+
+
+
 
     <div class="overlay" id="imageOverlay">
         <div class="overlay-content" id="imageContainer">

@@ -21,6 +21,14 @@ def get_folder_contents():
             
     return folder_contents
 
+def get_uploaded_images():
+    """Retrieve the list of uploaded images."""
+    uploaded_images = []
+    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        if filename.endswith(('.jpg', '.png', '.jpeg')):
+            uploaded_images.append(filename)
+    return uploaded_images
+
 def get_label_contents():
     folder_contents = {}
     for root, dirs, files in os.walk("./static/labels"):
@@ -91,8 +99,9 @@ def upload_group_photo():
 
     folder_contents = get_folder_contents()
     label_contents = get_label_contents()
+    uploaded_images = get_uploaded_images()
     # return render_template('index.html', folder_contents=folder_contents, UPLOAD_FOLDER=UPLOAD_FOLDER)
-    return render_template('index.html', folder_contents=folder_contents, label_contents=label_contents, UPLOAD_FOLDER=UPLOAD_FOLDER)
+    return render_template('index.html', folder_contents=folder_contents, label_contents=label_contents,uploaded_images=uploaded_images, UPLOAD_FOLDER=UPLOAD_FOLDER)
 
 
 @app.route('/rename', methods=['GET'])
